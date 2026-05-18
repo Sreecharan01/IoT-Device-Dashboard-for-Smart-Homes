@@ -11,8 +11,11 @@ import DeviceDetail from './pages/DeviceDetail';
 import AdminPanel from './pages/AdminPanel';
 import Analytics from './pages/Analytics';
 import Alerts from './pages/Alerts';
+import Profile from './pages/Profile';
+import MobileTracker from './pages/MobileTracker';
 import MainLayout from './layouts/MainLayout';
 import { useAuthStore } from './store/authStore';
+import { useDeviceStore } from './store/deviceStore';
 
 gsap.registerPlugin(ScrollTrigger, Flip, TextPlugin);
 
@@ -33,15 +36,27 @@ const ProtectedRoute = ({ children, requireAdmin }) => {
 
 function App() {
   const initAuth = useAuthStore(state => state.initAuth);
-  
+  const isAuthenticated = useAuthStore(state => state.isAuthenticated);
+  const loading = useAuthStore(state => state.loading);
+  const fetchDevices = useDeviceStore(state => state.fetchDevices);
+
+  // First initialize auth from localStorage
   useEffect(() => {
     initAuth();
   }, [initAuth]);
+
+  // Only fetch devices once auth is resolved and user is logged in
+  useEffect(() => {
+    if (!loading && isAuthenticated) {
+      fetchDevices();
+    }
+  }, [loading, isAuthenticated, fetchDevices]);
 
   return (
     <Router>
       <Routes>
         <Route path="/login" element={<Login />} />
+        <Route path="/tracker" element={<MobileTracker />} />
         
         <Route path="/" element={
           <ProtectedRoute>
@@ -54,6 +69,7 @@ function App() {
           <Route path="device/:id" element={<DeviceDetail />} />
           <Route path="analytics" element={<Analytics />} />
           <Route path="alerts" element={<Alerts />} />
+          <Route path="profile" element={<Profile />} />
           <Route path="admin" element={
             <ProtectedRoute requireAdmin={true}>
               <AdminPanel />

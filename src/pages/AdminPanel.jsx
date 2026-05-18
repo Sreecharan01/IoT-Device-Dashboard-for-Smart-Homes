@@ -1,79 +1,163 @@
-import { useState } from 'react';
-import { ShieldAlert, CheckCircle, XCircle, Clock } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { ShieldAlert, User, Laptop, Key } from 'lucide-react';
 
 export default function AdminPanel() {
-  const [requests, setRequests] = useState([
-    { id: 'req1', name: 'Garage Camera', type: 'camera', user: 'admin@nexushome.io', status: 'pending' },
-    { id: 'req2', name: 'Kids Room Light', type: 'light', user: 'guest@nexushome.io', status: 'pending' },
-    { id: 'req3', name: 'Main Door Lock', type: 'lock', user: 'admin@nexushome.io', status: 'approved' },
-  ]);
+  const [users, setUsers] = useState([]);
+  const [devices, setDevices] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const handleDragStart = (e, id) => {
-    e.dataTransfer.setData('reqId', id);
+  useEffect(() => {
+    fetchAdminData();
+  }, []);
+
+  const fetchAdminData = async () => {
+    try {
+      const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+      const token = userInfo?.token;
+      
+      const [usersRes, devicesRes] = await Promise.all([
+        fetch('/api/admin/users', { headers: { Authorization: `Bearer ${token}` } }),
+        fetch('/api/admin/devices', { headers: { Authorization: `Bearer ${token}` } })
+      ]);
+      
+      if (!usersRes.ok || !devicesRes.ok) throw new Error('Failed to fetch admin data');
+      
+      const usersData = await usersRes.json();
+      const devicesData = await devicesRes.json();
+      
+      setUsers(usersData);
+      setDevices(devicesData);
+      setLoading(false);
+    } catch (err) {
+      setError(err.message);
+      setLoading(false);
+    }
   };
 
-  const handleDrop = (e, newStatus) => {
-    const id = e.dataTransfer.getData('reqId');
-    setRequests(requests.map(r => r.id === id ? { ...r, status: newStatus } : r));
+  const updateSubscription = async (userId, subscription) => {
+    try {
+      const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+      const token = userInfo?.token;
+      
+      const res = await fetch(`/api/admin/users/${userId}/subscription`, {
+        method: 'PUT',
+        headers: { 
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}` 
+        },
+        body: JSON.stringify({ subscription })
+      });
+      
+      if (res.ok) {
+        setUsers(users.map(u => u._id === userId ? { ...u, subscription } : u));
+      }
+    } catch (error) {
+      console.error('Failed to update subscription', error);
+    }
   };
 
-  const columns = [
-    { id: 'pending', title: 'Pending Validation', icon: Clock, color: 'text-yellow-400', bg: 'bg-yellow-400/10' },
-    { id: 'approved', title: 'Approved', icon: CheckCircle, color: 'text-green-400', bg: 'bg-green-400/10' },
-    { id: 'rejected', title: 'Rejected', icon: XCircle, color: 'text-red-400', bg: 'bg-red-400/10' },
-  ];
+  if (loading) return <div className="text-[#8892b0] flex items-center justify-center h-64">Loading Admin Data...</div>;
+  if (error) return <div className="text-red-400 bg-red-400/10 p-4 rounded-xl border border-red-400/20">{error}</div>;
 
   return (
-    <div className="space-y-8 h-[calc(100vh-8rem)] flex flex-col">
+    <div className="space-y-8">
       <div>
         <h1 className="text-4xl font-heading font-bold text-white mb-2 flex items-center gap-3">
-          <ShieldAlert className="text-[#aa3bff]" size={36} /> Admin Validation Panel
+          <ShieldAlert className="text-[#aa3bff]" size={36} /> Admin Dashboard
         </h1>
-        <p className="text-[#8892b0]">Drag and drop device registration requests to approve or reject them.</p>
+        <p className="text-[#8892b0]">Manage users, their subscriptions, and monitor registered devices.</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 flex-1 min-h-0">
-        {columns.map(col => {
-          const Icon = col.icon;
-          return (
-            <div 
-              key={col.id} 
-              className="glass-panel rounded-2xl flex flex-col overflow-hidden border border-white/5"
-              onDragOver={(e) => e.preventDefault()}
-              onDrop={(e) => handleDrop(e, col.id)}
-            >
-              <div className={`p-4 border-b border-white/5 flex items-center gap-2 ${col.bg}`}>
-                <Icon className={col.color} size={20} />
-                <h3 className="font-bold text-white">{col.title}</h3>
-                <div className="ml-auto bg-black/40 px-2 py-0.5 rounded text-xs text-white font-mono">
-                  {requests.filter(r => r.status === col.id).length}
-                </div>
-              </div>
-              
-              <div className="p-4 flex-1 overflow-y-auto space-y-3">
-                {requests.filter(r => r.status === col.id).map(req => (
-                  <div 
-                    key={req.id}
-                    draggable
-                    onDragStart={(e) => handleDragStart(e, req.id)}
-                    className="bg-black/40 border border-white/10 p-4 rounded-xl cursor-move hover:border-[#66fcf1]/50 hover:shadow-[0_0_15px_rgba(102,252,241,0.1)] transition-all"
-                  >
-                    <h4 className="font-bold text-white mb-1">{req.name}</h4>
-                    <div className="flex justify-between items-center text-xs text-[#8892b0]">
-                      <span className="capitalize px-2 py-1 bg-white/5 rounded">{req.type}</span>
-                      <span>{req.user}</span>
+      <div className="glass-panel rounded-2xl border border-white/5 overflow-hidden">
+        <div className="p-6 border-b border-white/5 flex items-center gap-3 bg-white/5">
+          <User className="text-[#66fcf1]" size={24} />
+          <h2 className="text-xl font-bold text-white">Registered Users & Subscriptions</h2>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left">
+            <thead>
+              <tr className="border-b border-white/5 text-[#8892b0] text-sm">
+                <th className="p-4 font-medium">Email</th>
+                <th className="p-4 font-medium">Role</th>
+                <th className="p-4 font-medium">Subscription Plan</th>
+                <th className="p-4 font-medium">Total Devices</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-white/5">
+              {users.map(user => {
+                const userDevices = devices.filter(d => d.userId?._id === user._id || d.userId === user._id);
+                return (
+                  <tr key={user._id} className="hover:bg-white/5 transition-colors">
+                    <td className="p-4 text-white font-medium">{user.email}</td>
+                    <td className="p-4">
+                      <span className={`px-2 py-1 rounded text-xs uppercase tracking-wider font-bold ${user.role === 'admin' ? 'bg-[#aa3bff]/20 text-[#aa3bff]' : 'bg-white/10 text-[#8892b0]'}`}>
+                        {user.role}
+                      </span>
+                    </td>
+                    <td className="p-4">
+                      <select 
+                        value={user.subscription || 'free'}
+                        onChange={(e) => updateSubscription(user._id, e.target.value)}
+                        className="bg-black/40 border border-white/10 rounded-lg px-3 py-1.5 text-white text-sm focus:outline-none focus:border-[#66fcf1]/50 cursor-pointer"
+                      >
+                        <option value="free">Free Tier</option>
+                        <option value="premium">Premium</option>
+                        <option value="pro">Pro Plan</option>
+                      </select>
+                    </td>
+                    <td className="p-4 text-[#8892b0]">
+                      {userDevices.length}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div className="glass-panel rounded-2xl border border-white/5 overflow-hidden">
+        <div className="p-6 border-b border-white/5 flex items-center gap-3 bg-white/5">
+          <Laptop className="text-[#66fcf1]" size={24} />
+          <h2 className="text-xl font-bold text-white">All Devices in Network</h2>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left">
+            <thead>
+              <tr className="border-b border-white/5 text-[#8892b0] text-sm">
+                <th className="p-4 font-medium">Device Name</th>
+                <th className="p-4 font-medium">Type</th>
+                <th className="p-4 font-medium">Location</th>
+                <th className="p-4 font-medium">Owner (User)</th>
+                <th className="p-4 font-medium">Status</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-white/5">
+              {devices.map(device => (
+                <tr key={device._id} className="hover:bg-white/5 transition-colors">
+                  <td className="p-4 text-white font-bold">{device.name}</td>
+                  <td className="p-4">
+                    <span className="bg-white/10 text-white px-2 py-1 rounded text-xs capitalize">{device.type}</span>
+                  </td>
+                  <td className="p-4 text-[#8892b0]">{device.location}</td>
+                  <td className="p-4 text-[#66fcf1] text-sm">{device.userId?.email || 'Unknown'}</td>
+                  <td className="p-4">
+                    <div className="flex items-center gap-2">
+                      <div className={`w-2 h-2 rounded-full ${device.status === 'online' ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.8)]' : 'bg-red-500'}`}></div>
+                      <span className="text-sm text-[#8892b0] capitalize">{device.status}</span>
                     </div>
-                  </div>
-                ))}
-                {requests.filter(r => r.status === col.id).length === 0 && (
-                  <div className="h-full flex items-center justify-center text-[#8892b0] text-sm border-2 border-dashed border-white/5 rounded-xl">
-                    Drop cards here
-                  </div>
-                )}
-              </div>
-            </div>
-          );
-        })}
+                  </td>
+                </tr>
+              ))}
+              {devices.length === 0 && (
+                <tr>
+                  <td colSpan="5" className="p-8 text-center text-[#8892b0]">No devices registered in the network.</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

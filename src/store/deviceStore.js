@@ -1,107 +1,272 @@
 import { create } from 'zustand';
 
-export const useDeviceStore = create((set) => ({
-  devices: [
-    {
-      id: 'd1',
-      name: 'Living Room Light',
-      type: 'light',
-      location: 'Living Room',
-      status: 'online',
-      state: { isOn: false, brightness: 100 },
-      connection: 'wifi',
-      geofenceEnabled: true,
-      satelliteSupport: false,
-    },
-    {
-      id: 'd2',
-      name: 'Smart Thermostat',
-      type: 'thermostat',
-      location: 'Hallway',
-      status: 'online',
-      state: { temp: 22, mode: 'cool' },
-      connection: 'wifi',
-      geofenceEnabled: true,
-      satelliteSupport: false,
-    },
-    {
-      id: 'd3',
-      name: 'Main Gate Lock',
-      type: 'lock',
-      location: 'Exterior',
-      status: 'online',
-      state: { isLocked: true },
-      connection: 'satellite',
-      geofenceEnabled: true,
-      satelliteSupport: true,
-    },
-    {
-      id: 'd4',
-      name: 'Bedroom AC',
-      type: 'ac',
-      location: 'Bedroom',
-      status: 'offline',
-      state: { isOn: false, temp: 24 },
-      connection: 'wifi',
-      geofenceEnabled: false,
-      satelliteSupport: false,
+const defaultDevices = [
+  {
+    id: 'd1',
+    name: 'Living Room Light',
+    type: 'light',
+    location: 'Living Room',
+    status: 'online',
+    state: { isOn: false, brightness: 100 },
+    connection: 'wifi',
+    geofenceEnabled: true,
+    satelliteSupport: false,
+  },
+  {
+    id: 'd2',
+    name: 'Smart Thermostat',
+    type: 'thermostat',
+    location: 'Hallway',
+    status: 'online',
+    state: { temp: 22, mode: 'cool' },
+    connection: 'wifi',
+    geofenceEnabled: true,
+    satelliteSupport: false,
+  },
+  {
+    id: 'd3',
+    name: 'Main Gate Lock',
+    type: 'lock',
+    location: 'Exterior',
+    status: 'online',
+    state: { isLocked: true },
+    connection: 'satellite',
+    geofenceEnabled: true,
+    satelliteSupport: true,
+  },
+  {
+    id: 'd4',
+    name: 'Bedroom AC',
+    type: 'ac',
+    location: 'Bedroom',
+    status: 'offline',
+    state: { isOn: false, temp: 24 },
+    connection: 'wifi',
+    geofenceEnabled: false,
+    satelliteSupport: false,
+  }
+];
+
+// Haversine formula — returns distance in km between two lat/lng points
+const haversineDistance = (lat1, lng1, lat2, lng2) => {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLng / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+};
+
+const savedHome = (() => {
+  try { return JSON.parse(localStorage.getItem('syncra_home_location')); } catch { return null; }
+})();
+
+export const useDeviceStore = create((set, get) => ({
+  devices: [],
+  userLocation: null,           // { lat, lng } — live GPS
+  homeLocation: savedHome,      // { lat, lng } — saved home position
+  distanceToHome: 5.0,          // km
+  isTrackingGPS: false,
+
+  setHomeLocation: (lat, lng) => {
+    const loc = { lat, lng };
+    localStorage.setItem('syncra_home_location', JSON.stringify(loc));
+    set({ homeLocation: loc });
+    // Immediately recalculate distance if we already have user location
+    const { userLocation } = get();
+    if (userLocation) {
+      const dist = haversineDistance(userLocation.lat, userLocation.lng, lat, lng);
+      get().updateDistance(dist);
     }
-  ],
-  userLocation: { lat: 0, lng: 0 },
-  homeLocation: { lat: 0, lng: 0 }, // Assuming home is at 0,0 for now
-  distanceToHome: 5.0, // km
+  },
+
+  updateUserLocation: (lat, lng) => {
+    set({ userLocation: { lat, lng }, isTrackingGPS: true });
+    const { homeLocation } = get();
+    if (homeLocation) {
+      const dist = haversineDistance(lat, lng, homeLocation.lat, homeLocation.lng);
+      get().updateDistance(dist);
+    }
+  },
+
+  setTrackingGPS: (val) => set({ isTrackingGPS: val }),
   
-  toggleDevice: (id) => set((state) => ({
-    devices: state.devices.map(device => {
-      if (device.id === id) {
-        if (device.type === 'light' || device.type === 'ac') {
-          return { ...device, state: { ...device.state, isOn: !device.state.isOn } };
+  fetchDevices: async () => {
+    try {
+      const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+      const token = userInfo?.token;
+      if (!token) return;
+
+      const res = await fetch('/api/devices', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (data.length === 0) {
+        // Seed db
+        for (const dev of defaultDevices) {
+          await fetch('/api/devices', {
+            method: 'POST',
+            headers: { 
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify(dev)
+          });
         }
-        if (device.type === 'lock') {
-          return { ...device, state: { ...device.state, isLocked: !device.state.isLocked } };
-        }
+        set({ devices: defaultDevices });
+      } else {
+        set({ devices: data });
       }
-      return device;
-    })
-  })),
+    } catch (error) {
+      console.error('Error fetching devices', error);
+      // Fallback to defaults
+      set({ devices: defaultDevices });
+    }
+  },
 
-  updateDistance: (dist) => set((state) => {
-    let newDevices = [...state.devices];
-    
-    // Auto-trigger geofence enabled devices if within 1.5km
-    if (dist <= 1.5 && state.distanceToHome > 1.5) {
-      newDevices = newDevices.map(d => {
-        if (d.geofenceEnabled && d.status === 'online') {
-          if (d.type === 'light' || d.type === 'ac') {
-            return { ...d, state: { ...d.state, isOn: true } };
+  updateDeviceApi: async (id, updates) => {
+    try {
+      const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+      const token = userInfo?.token;
+      if (!token) return;
+
+      await fetch(`/api/devices/${id}`, {
+        method: 'PUT',
+        headers: { 
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(updates)
+      });
+    } catch (error) {
+      console.error('Error updating device', error);
+    }
+  },
+
+  addDevice: async (newDevice) => {
+    try {
+      const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+      const token = userInfo?.token;
+      if (!token) return;
+
+      const res = await fetch('/api/devices', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(newDevice)
+      });
+      const data = await res.json();
+      set((state) => ({ devices: [...state.devices, data] }));
+    } catch (error) {
+      console.error('Error adding device', error);
+    }
+  },
+
+  removeDevice: async (id) => {
+    try {
+      const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+      const token = userInfo?.token;
+      if (!token) return;
+
+      await fetch(`/api/devices/${id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      set((state) => ({ devices: state.devices.filter(d => (d._id || d.id) !== id) }));
+    } catch (error) {
+      console.error('Error removing device', error);
+    }
+  },
+
+  updateDeviceState: (id, newStateUpdate) => {
+    set((state) => {
+      const devices = state.devices.map(device => {
+        if ((device._id || device.id) === id) {
+          const updatedDevice = { ...device, state: { ...device.state, ...newStateUpdate } };
+          get().updateDeviceApi(device.id, updatedDevice);
+          return updatedDevice;
+        }
+        return device;
+      });
+      return { devices };
+    });
+  },
+
+  toggleDevice: (id) => {
+    set((state) => {
+      const devices = state.devices.map(device => {
+        if (device.id === id || device._id === id) {
+          let updatedState = { ...device.state };
+          if (device.type === 'light' || device.type === 'ac' || device.type === 'tv' || device.type === 'audio' || device.type === 'thermostat') {
+            updatedState.isOn = !device.state.isOn;
           }
-          if (d.type === 'lock') {
-            return { ...d, state: { ...d.state, isLocked: false } }; // Auto unlock
+          if (device.type === 'lock') {
+            updatedState.isLocked = !device.state.isLocked;
           }
+          const updatedDevice = { ...device, state: updatedState };
+          get().updateDeviceApi(id, updatedDevice);
+          return updatedDevice;
+        }
+        return device;
+      });
+      return { devices };
+    });
+  },
+
+  updateDistance: (dist) => {
+    set((state) => {
+      let changedDevices = [];
+      let newDevices = state.devices.map(d => {
+        let updated = false;
+        let newState = { ...d.state };
+        
+        // Auto-trigger geofence enabled devices if within 1.5km
+        if (dist <= 1.5 && state.distanceToHome > 1.5) {
+          if (d.geofenceEnabled && d.status === 'online') {
+            if (d.type === 'light' || d.type === 'ac') { newState.isOn = true; updated = true; }
+            if (d.type === 'lock') { newState.isLocked = false; updated = true; }
+          }
+        }
+        
+        // Auto-turn off or lock if moving away > 1.5km
+        if (dist > 1.5 && state.distanceToHome <= 1.5) {
+          if (d.geofenceEnabled && d.status === 'online') {
+            if (d.type === 'light' || d.type === 'ac') { newState.isOn = false; updated = true; }
+            if (d.type === 'lock') { newState.isLocked = true; updated = true; }
+          }
+        }
+        
+        if (updated) {
+          const updatedDevice = { ...d, state: newState };
+          changedDevices.push(updatedDevice);
+          return updatedDevice;
         }
         return d;
       });
-    }
-    
-    // Auto-turn off or lock if moving away > 1.5km
-    if (dist > 1.5 && state.distanceToHome <= 1.5) {
-      newDevices = newDevices.map(d => {
-        if (d.geofenceEnabled && d.status === 'online') {
-          if (d.type === 'light' || d.type === 'ac') {
-            return { ...d, state: { ...d.state, isOn: false } };
-          }
-          if (d.type === 'lock') {
-            return { ...d, state: { ...d.state, isLocked: true } }; // Auto lock
-          }
+
+      // Update API
+      changedDevices.forEach(d => get().updateDeviceApi(d.id, d));
+      
+      return { distanceToHome: dist, devices: newDevices };
+    });
+  },
+
+  toggleGeofence: (id) => {
+    set((state) => {
+      const devices = state.devices.map(d => {
+        if (d.id === id) {
+          const updatedDevice = { ...d, geofenceEnabled: !d.geofenceEnabled };
+          get().updateDeviceApi(id, updatedDevice);
+          return updatedDevice;
         }
         return d;
       });
-    }
-    
-    return { distanceToHome: dist, devices: newDevices };
-  }),
-
-  toggleGeofence: (id) => set((state) => ({
-    devices: state.devices.map(d => d.id === id ? { ...d, geofenceEnabled: !d.geofenceEnabled } : d)
-  }))
+      return { devices };
+    });
+  }
 }));
