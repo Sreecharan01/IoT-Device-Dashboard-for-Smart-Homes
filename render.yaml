@@ -30,20 +30,16 @@ services:
       - key: SESSION_DOMAIN
         value: ".onrender.com" # Required for cookies across domains if using the default Render URL
       
-      # Database Configuration (TiDB Serverless)
+      # Database Configuration (Supabase PostgreSQL)
       - key: DB_CONNECTION
-        value: mysql
+        value: pgsql
       - key: DB_HOST
-        sync: false # Add your TiDB Host here in the Render Dashboard
+        sync: false # Add your Supabase Host here in the Render Dashboard
       - key: DB_PORT
-        value: 4000 # Default TiDB Port
+        value: "6543" # Default Supabase Pooler Port (or 5432)
       - key: DB_DATABASE
-        sync: false # Add your TiDB Database name here
+        value: postgres
       - key: DB_USERNAME
-        sync: false # Add your TiDB Username here
+        sync: false # Add your Supabase Username here
       - key: DB_PASSWORD
-        sync: false # Add your TiDB Password here
-      
-      # SSL CA required for TiDB Serverless (Standard path in Debian Docker containers)
-      - key: MYSQL_ATTR_SSL_CA
-        value: "/etc/ssl/certs/ca-certificates.crt"
+        sync: false # Add your Supabase Password here

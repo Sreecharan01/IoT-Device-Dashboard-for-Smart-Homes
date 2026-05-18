@@ -1,16 +1,17 @@
 FROM php:8.2-apache
 
-# Install dependencies and required extensions for Laravel & TiDB/MySQL
+# Install dependencies and required extensions for Laravel & PostgreSQL/Supabase
 RUN apt-get update && apt-get install -y \
     libpng-dev \
     libonig-dev \
     libxml2-dev \
+    libpq-dev \
     zip \
     unzip \
     git \
     curl \
     ca-certificates \
-    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd
+    && docker-php-ext-install pdo_pgsql mbstring exif pcntl bcmath gd
 
 # Enable Apache mod_rewrite
 RUN a2enmod rewrite
