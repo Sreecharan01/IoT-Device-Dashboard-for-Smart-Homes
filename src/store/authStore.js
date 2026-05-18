@@ -20,14 +20,15 @@ export const useAuthStore = create((set) => ({
 
   login: async (email, password) => {
     try {
-      const res = await fetch('/api/auth/login', {
+      const API_URL = import.meta.env.VITE_API_URL || '/api';
+      const res = await fetch(`${API_URL}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password })
       });
       let data;
       try { data = await res.json(); }
-      catch { return { data: null, error: { message: 'Cannot connect to server. Please whitelist your IP in MongoDB Atlas (Network Access).' } }; }
+      catch { return { data: null, error: { message: 'Cannot connect to server. Please ensure the backend is running.' } }; }
       if (!res.ok) throw new Error(data.message || 'Login failed');
       
       localStorage.setItem('userInfo', JSON.stringify(data));
@@ -40,14 +41,15 @@ export const useAuthStore = create((set) => ({
 
   signUp: async (email, password) => {
     try {
-      const res = await fetch('/api/auth/register', {
+      const API_URL = import.meta.env.VITE_API_URL || '/api';
+      const res = await fetch(`${API_URL}/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password, role: 'user', subscription: 'free' })
       });
       let data;
       try { data = await res.json(); }
-      catch { return { data: null, error: { message: 'Cannot connect to server. Please whitelist your IP in MongoDB Atlas (Network Access).' } }; }
+      catch { return { data: null, error: { message: 'Cannot connect to server. Please ensure the backend is running.' } }; }
       if (!res.ok) throw new Error(data.message || 'Signup failed');
 
       localStorage.setItem('userInfo', JSON.stringify(data));
