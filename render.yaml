@@ -17,6 +17,10 @@ services:
       - key: APP_URL
         # Render will automatically provide its host, but you can override this if you use a custom domain.
         value: "https://iot-backend.onrender.com"
+        
+      # Fix Apache Port Mapping
+      - key: PORT
+        value: "80"
       
       # Frontend URL for CORS and Sanctum
       - key: FRONTEND_URL
