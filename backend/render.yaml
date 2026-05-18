@@ -1,0 +1,45 @@
+services:
+  - type: web
+    name: iot-backend
+    env: docker
+    rootDir: backend
+    dockerfilePath: Dockerfile
+    plan: free # Change to starter/pro if needed
+    envVars:
+      - key: APP_NAME
+        value: "IoT Dashboard"
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: false
+      - key: APP_KEY
+        generateValue: true
+      - key: APP_URL
+        # Render will automatically provide its host, but you can override this if you use a custom domain.
+        value: "https://iot-backend.onrender.com"
+      
+      # Frontend URL for CORS and Sanctum
+      - key: FRONTEND_URL
+        value: "https://io-t-device-dashboard-for-smart-hom.vercel.app"
+      - key: SANCTUM_STATEFUL_DOMAINS
+        value: "io-t-device-dashboard-for-smart-hom.vercel.app"
+      - key: SESSION_DOMAIN
+        value: ".onrender.com" # Required for cookies across domains if using the default Render URL
+      
+      # Database Configuration (TiDB Serverless)
+      - key: DB_CONNECTION
+        value: mysql
+      - key: DB_HOST
+        sync: false # Add your TiDB Host here in the Render Dashboard
+      - key: DB_PORT
+        value: 4000 # Default TiDB Port
+      - key: DB_DATABASE
+        sync: false # Add your TiDB Database name here
+      - key: DB_USERNAME
+        sync: false # Add your TiDB Username here
+      - key: DB_PASSWORD
+        sync: false # Add your TiDB Password here
+      
+      # SSL CA required for TiDB Serverless (Standard path in Debian Docker containers)
+      - key: MYSQL_ATTR_SSL_CA
+        value: "/etc/ssl/certs/ca-certificates.crt"
