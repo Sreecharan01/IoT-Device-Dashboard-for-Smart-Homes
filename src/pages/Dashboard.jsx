@@ -33,6 +33,21 @@ export default function Dashboard() {
   const [selectedDeviceId, setSelectedDeviceId] = useState('');
   const [gpsError, setGpsError] = useState(null);
   const [gpsAccuracy, setGpsAccuracy] = useState(null);
+  const [selectedCamera, setSelectedCamera] = useState(null);
+  const [liveTime, setLiveTime] = useState('');
+
+  useEffect(() => {
+    const updateTime = () => {
+      const d = new Date();
+      const pad = (n) => String(n).padStart(2, '0');
+      const dateStr = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+      const timeStr = `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+      setLiveTime(`${dateStr} ${timeStr}`);
+    };
+    updateTime();
+    const timer = setInterval(updateTime, 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   // Start GPS watch
   const startTracking = useCallback(() => {
@@ -461,7 +476,48 @@ export default function Dashboard() {
                   </div>
                 )}
 
-                {!['thermostat', 'light', 'ac', 'lock'].includes(device.type) && (() => {
+                {device.type === 'camera' && (() => {
+                  const cameraFeedUrl = device.name.toLowerCase().includes('patio') ? '/patio_feed.png' : '/living_room_feed.png';
+                  return (
+                    <div 
+                      onClick={() => isOnline && !isOff && setSelectedCamera(device)}
+                      className={`relative w-full h-32 rounded-xl overflow-hidden border border-white/10 group-hover:border-[#66fcf1]/40 transition-all cursor-pointer ${isOff || !isOnline ? 'bg-gray-900 flex items-center justify-center' : ''}`}
+                    >
+                      {isOff || !isOnline ? (
+                        <div className="text-center space-y-2">
+                          <Video size={36} className="text-gray-500 mx-auto" />
+                          <p className="text-xs font-mono tracking-wider text-gray-500 font-bold uppercase">FEED INACTIVE</p>
+                        </div>
+                      ) : (
+                        <>
+                          <img src={cameraFeedUrl} alt={device.name} className="w-full h-full object-cover brightness-90 group-hover:scale-105 transition-transform duration-700" />
+                          
+                          {/* Live overlays */}
+                          <div className="absolute top-2 left-2 px-1.5 py-0.5 rounded bg-black/60 border border-white/10 flex items-center gap-1.5">
+                            <div className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></div>
+                            <span className="text-[9px] font-mono text-white font-bold tracking-wider">REC</span>
+                          </div>
+
+                          <div className="absolute top-2 right-2 px-1.5 py-0.5 rounded bg-black/60 border border-white/10">
+                            <span className="text-[9px] font-mono text-[#66fcf1] font-bold uppercase tracking-wider">{device.location}</span>
+                          </div>
+
+                          <div className="absolute bottom-2 left-2 px-1.5 py-0.5 rounded bg-black/60 border border-white/10">
+                            <span className="text-[9px] font-mono text-white/80">{liveTime}</span>
+                          </div>
+
+                          <div className="absolute bottom-2 right-2 p-1.5 rounded-lg bg-black/70 hover:bg-[#66fcf1] hover:text-black text-[#66fcf1] transition-colors border border-white/10">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                              <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" />
+                            </svg>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  );
+                })()}
+
+                {!['thermostat', 'light', 'ac', 'lock', 'camera'].includes(device.type) && (() => {
                   const Icon = getDeviceIcon(device.type);
                   return (
                     <div className={`p-4 rounded-full transition-all duration-500 ${!isOff ? 'bg-[#66fcf1]/20 shadow-[0_0_30px_rgba(102,252,241,0.3)]' : 'bg-gray-800'}`}>
@@ -496,6 +552,121 @@ export default function Dashboard() {
           );
         })}
       </div>
+
+      {/* Selected Camera Modal */}
+      {selectedCamera && (() => {
+        const cameraFeedUrl = selectedCamera.name.toLowerCase().includes('patio') ? '/patio_feed.png' : '/living_room_feed.png';
+        return (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
+            <div className="glass-panel p-6 rounded-2xl w-full max-w-4xl border border-[#66fcf1]/30 relative overflow-hidden flex flex-col md:flex-row gap-6">
+              
+              {/* Camera Feed Column */}
+              <div className="flex-1 space-y-4">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                    <span className="inline-block w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse" />
+                    {selectedCamera.name}
+                  </h3>
+                  <span className="text-xs font-mono text-[#8892b0]">{liveTime}</span>
+                </div>
+                
+                {/* Image Container with overlays */}
+                <div className="relative aspect-video rounded-xl overflow-hidden border border-white/10 bg-black">
+                  <img src={cameraFeedUrl} alt={selectedCamera.name} className="w-full h-full object-cover" />
+                  
+                  {/* Scanlines / Overlay */}
+                  <div className="absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[length:100%_4px,3px_100%] pointer-events-none opacity-40" />
+                  
+                  {/* Grid Lines */}
+                  <div className="absolute inset-0 border border-[#66fcf1]/10 flex pointer-events-none">
+                    <div className="w-1/3 border-r border-[#66fcf1]/10 h-full" />
+                    <div className="w-1/3 border-r border-[#66fcf1]/10 h-full" />
+                  </div>
+                  <div className="absolute inset-0 flex flex-col pointer-events-none">
+                    <div className="h-1/3 border-b border-[#66fcf1]/10 w-full" />
+                    <div className="h-1/3 border-b border-[#66fcf1]/10 w-full" />
+                  </div>
+
+                  {/* Corner notches */}
+                  <div className="absolute top-4 left-4 w-4 h-4 border-t-2 border-l-2 border-white/40 pointer-events-none" />
+                  <div className="absolute top-4 right-4 w-4 h-4 border-t-2 border-r-2 border-white/40 pointer-events-none" />
+                  <div className="absolute bottom-4 left-4 w-4 h-4 border-b-2 border-l-2 border-white/40 pointer-events-none" />
+                  <div className="absolute bottom-4 right-4 w-4 h-4 border-b-2 border-r-2 border-white/40 pointer-events-none" />
+
+                  {/* Lens overlay tag */}
+                  <div className="absolute top-4 left-4 bg-black/60 px-2 py-1 rounded text-[10px] font-mono text-[#66fcf1] border border-white/10 ml-5 mt-5 font-bold">
+                    CH01 - UHD 4K - 30FPS
+                  </div>
+                </div>
+              </div>
+              
+              {/* Controls Column */}
+              <div className="w-full md:w-80 flex flex-col justify-between">
+                <div>
+                  <div className="flex justify-between items-center mb-6">
+                    <span className="text-sm font-mono font-bold tracking-wider text-[#66fcf1]">SURVEILLANCE CONTROL</span>
+                    <button 
+                      onClick={() => setSelectedCamera(null)}
+                      className="text-gray-400 hover:text-white transition-colors"
+                      aria-label="Close"
+                    >
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    </button>
+                  </div>
+
+                  {/* Pan Tilt Zoom (PTZ) controls */}
+                  <div className="space-y-6">
+                    <div className="space-y-3">
+                      <label className="text-xs font-mono uppercase tracking-widest text-[#8892b0]">PTZ Pan / Tilt</label>
+                      <div className="relative w-32 h-32 mx-auto bg-black/40 rounded-full border border-white/10 flex items-center justify-center">
+                        <button className="absolute top-2 text-[#8892b0] hover:text-[#66fcf1] active:scale-95 transition-all text-sm font-bold">▲</button>
+                        <button className="absolute bottom-2 text-[#8892b0] hover:text-[#66fcf1] active:scale-95 transition-all text-sm font-bold">▼</button>
+                        <button className="absolute left-2 text-[#8892b0] hover:text-[#66fcf1] active:scale-95 transition-all text-sm font-bold">◀</button>
+                        <button className="absolute right-2 text-[#8892b0] hover:text-[#66fcf1] active:scale-95 transition-all text-sm font-bold">▶</button>
+                        <div className="w-12 h-12 rounded-full bg-black/60 border border-[#66fcf1]/30 flex items-center justify-center text-xs font-mono text-[#66fcf1] shadow-[0_0_10px_rgba(102,252,241,0.2)] font-bold">
+                          PTZ
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Camera properties */}
+                    <div className="space-y-3 pt-4 border-t border-white/5">
+                      <div className="flex justify-between text-xs font-mono">
+                        <span className="text-[#8892b0]">Signal Quality</span>
+                        <span className="text-[#10b981] font-bold">98% (Excellent)</span>
+                      </div>
+                      <div className="flex justify-between text-xs font-mono">
+                        <span className="text-[#8892b0]">Bitrate</span>
+                        <span className="text-white">4.82 Mbps</span>
+                      </div>
+                      <div className="flex justify-between text-xs font-mono">
+                        <span className="text-[#8892b0]">Storage Mode</span>
+                        <span className="text-white">Continuous Cloud</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="pt-6 border-t border-white/5 flex gap-3">
+                  <button 
+                    onClick={() => alert('Initiating warning siren sound...')}
+                    className="flex-1 py-2.5 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 hover:bg-red-500/20 text-xs font-mono font-bold transition-all"
+                  >
+                    🚨 SIREN ALERT
+                  </button>
+                  <button 
+                    onClick={() => setSelectedCamera(null)}
+                    className="flex-1 py-2.5 rounded-xl bg-[#66fcf1] text-black hover:bg-white text-xs font-mono font-bold transition-all"
+                  >
+                    CLOSE MONITOR
+                  </button>
+                </div>
+              </div>
+              
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }
