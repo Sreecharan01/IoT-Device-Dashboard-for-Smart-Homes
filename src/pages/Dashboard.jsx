@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { useDeviceStore } from '../store/deviceStore';
 import { Power, MapPin, Wifi, Satellite, Lock, Unlock, Fan, Navigation, Radio, Tv, Speaker, Video, Wind, Droplet, Plug, Eye, Refrigerator, Lightbulb } from 'lucide-react';
+import FridgeInventoryModal from '../components/FridgeInventoryModal';
 import gsap from 'gsap';
 
 const getDeviceIcon = (type) => {
@@ -33,6 +34,9 @@ export default function Dashboard() {
   const [selectedDeviceId, setSelectedDeviceId] = useState('');
   const [gpsError, setGpsError] = useState(null);
   const [gpsAccuracy, setGpsAccuracy] = useState(null);
+  const [selectedFridgeId, setSelectedFridgeId] = useState(null);
+
+  const selectedFridge = devices.find(d => (d._id || d.id) === selectedFridgeId);
   const [selectedCamera, setSelectedCamera] = useState(null);
   const [liveTime, setLiveTime] = useState('');
 
@@ -567,7 +571,22 @@ export default function Dashboard() {
                   );
                 })()}
 
-                {!['thermostat', 'light', 'ac', 'lock', 'camera'].includes(device.type) && (() => {
+                {device.type === 'fridge' && (
+                  <div className="flex flex-col items-center gap-3 w-full">
+                    <div className={`p-4 rounded-full transition-all duration-500 ${!isOff ? 'bg-[#66fcf1]/20 shadow-[0_0_30px_rgba(102,252,241,0.3)]' : 'bg-gray-800'}`}>
+                      <Refrigerator size={36} className={!isOff ? 'text-[#66fcf1]' : 'text-gray-500'} />
+                    </div>
+                    <button
+                      onClick={() => !isOff && isOnline && setSelectedFridgeId(id)}
+                      disabled={isOff || !isOnline}
+                      className="px-4 py-1.5 bg-[#66fcf1]/10 hover:bg-[#66fcf1]/20 border border-[#66fcf1]/30 disabled:opacity-50 text-[#66fcf1] rounded-lg text-xs font-bold transition-colors cursor-pointer"
+                    >
+                      View Inventory
+                    </button>
+                  </div>
+                )}
+
+                {!['thermostat', 'light', 'ac', 'lock', 'camera', 'fridge'].includes(device.type) && (() => {
                   const Icon = getDeviceIcon(device.type);
                   return (
                     <div className={`p-4 rounded-full transition-all duration-500 ${!isOff ? 'bg-[#66fcf1]/20 shadow-[0_0_30px_rgba(102,252,241,0.3)]' : 'bg-gray-800'}`}>
@@ -717,6 +736,13 @@ export default function Dashboard() {
           </div>
         );
       })()}
+
+      {selectedFridge && (
+        <FridgeInventoryModal 
+          device={selectedFridge} 
+          onClose={() => setSelectedFridgeId(null)} 
+        />
+      )}
     </div>
   );
 }

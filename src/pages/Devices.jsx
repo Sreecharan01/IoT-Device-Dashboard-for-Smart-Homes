@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
 import { useDeviceStore } from '../store/deviceStore';
 import { Search, Plus, X, Lightbulb, Lock, Camera, Thermometer, Power, Volume2, Trash2, Tv, Speaker, Wind, Droplet, Plug, Eye, Refrigerator } from 'lucide-react';
+import FridgeInventoryModal from '../components/FridgeInventoryModal';
 import gsap from 'gsap';
 import { Flip } from 'gsap/Flip';
 
@@ -11,6 +12,9 @@ const API_URL = import.meta.env.VITE_API_URL || '/api';
 export default function Devices() {
   const { devices, addDevice, removeDevice, toggleDevice, updateDeviceState } = useDeviceStore();
   const [filter, setFilter] = useState('all');
+  const [selectedFridgeId, setSelectedFridgeId] = useState(null);
+
+  const selectedFridge = devices.find(d => (d._id || d.id) === selectedFridgeId);
   const [search, setSearch] = useState('');
   const [isAdding, setIsAdding] = useState(false);
   const [scanState, setScanState] = useState('idle');
@@ -276,25 +280,42 @@ export default function Devices() {
                   </div>
                 )}
                 
-                {(device.type === 'ac' || device.type === 'thermostat') && (
+                {(device.type === 'ac' || device.type === 'thermostat' || device.type === 'fridge') && (
                   <div className="space-y-2">
                     <div className="flex justify-between text-xs text-[#8892b0]">
                       <span>Temperature</span>
-                      <span>{device.state?.temp || 24}°C</span>
+                      <span>{device.state?.temp || (device.type === 'fridge' ? 4 : 24)}°C</span>
                     </div>
                     <div className="flex gap-2">
                       <button 
-                        onClick={() => updateDeviceState(id, { temp: (device.state?.temp || 24) - 1 })}
+                        onClick={() => {
+                          const currentTemp = device.state?.temp || (device.type === 'fridge' ? 4 : 24);
+                          const limit = device.type === 'fridge' ? 1 : 16;
+                          updateDeviceState(id, { temp: Math.max(limit, currentTemp - 1) });
+                        }}
                         disabled={!device.state?.isOn || device.status === 'offline'}
                         className="flex-1 bg-black/40 border border-white/10 text-white rounded-lg py-1 hover:border-[#66fcf1]/50 disabled:opacity-50"
                       >-</button>
                       <button 
-                        onClick={() => updateDeviceState(id, { temp: (device.state?.temp || 24) + 1 })}
+                        onClick={() => {
+                          const currentTemp = device.state?.temp || (device.type === 'fridge' ? 4 : 24);
+                          const limit = device.type === 'fridge' ? 8 : 30;
+                          updateDeviceState(id, { temp: Math.min(limit, currentTemp + 1) });
+                        }}
                         disabled={!device.state?.isOn || device.status === 'offline'}
                         className="flex-1 bg-black/40 border border-white/10 text-white rounded-lg py-1 hover:border-[#aa3bff]/50 disabled:opacity-50"
                       >+</button>
                     </div>
                   </div>
+                )}
+
+                {device.type === 'fridge' && (
+                  <button
+                    onClick={() => setSelectedFridgeId(id)}
+                    className="w-full py-2 bg-[#66fcf1]/10 hover:bg-[#66fcf1]/20 border border-[#66fcf1]/30 hover:border-[#66fcf1]/50 text-[#66fcf1] rounded-lg text-xs font-bold transition-colors cursor-pointer mt-2"
+                  >
+                    Manage Inventory
+                  </button>
                 )}
 
                 {device.type === 'lock' && (
@@ -462,6 +483,13 @@ export default function Devices() {
             )}
           </div>
         </div>
+      )}
+
+      {selectedFridge && (
+        <FridgeInventoryModal 
+          device={selectedFridge} 
+          onClose={() => setSelectedFridgeId(null)} 
+        />
       )}
     </div>
   );

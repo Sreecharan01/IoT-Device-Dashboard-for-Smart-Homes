@@ -51,7 +51,20 @@ const defaultDevices = [
     type: 'fridge',
     location: 'Kitchen',
     status: 'online',
-    state: { isOn: true, temp: 4 },
+    state: { 
+      isOn: true, 
+      temp: 4,
+      items: [
+        { name: "Organic Milk", qty: 1, unit: "Gallon", daysLeft: 4, category: "dairy" },
+        { name: "Fresh Eggs", qty: 12, unit: "pcs", daysLeft: 9, category: "dairy" },
+        { name: "Cheddar Cheese", qty: 1, unit: "Block", daysLeft: 15, category: "dairy" },
+        { name: "Greek Yogurt", qty: 4, unit: "Cups", daysLeft: 6, category: "dairy" },
+        { name: "Orange Juice", qty: 1, unit: "Bottle", daysLeft: 3, category: "beverage" },
+        { name: "Gala Apples", qty: 6, unit: "pcs", daysLeft: 8, category: "produce" },
+        { name: "Tomatoes", qty: 4, unit: "pcs", daysLeft: 5, category: "produce" },
+        { name: "Chicken Breast", qty: 2, unit: "lbs", daysLeft: 2, category: "meat" }
+      ]
+    },
     connection: 'wifi',
     geofenceEnabled: false,
     satelliteSupport: false,
