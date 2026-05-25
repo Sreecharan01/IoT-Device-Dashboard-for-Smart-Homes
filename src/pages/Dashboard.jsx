@@ -25,7 +25,7 @@ export default function Dashboard() {
   const {
     devices, distanceToHome, updateDistance, toggleDevice, toggleGeofence,
     homeLocation, userLocation, isTrackingGPS,
-    setHomeLocation, updateUserLocation, setTrackingGPS,
+    setHomeLocation, updateUserLocation, setTrackingGPS, updateDeviceState
   } = useDeviceStore();
 
   const statsRef = useRef([]);
@@ -424,11 +424,12 @@ export default function Dashboard() {
       <h2 className="text-2xl font-heading font-bold text-white mt-8 mb-4">Device Controls</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {devices.map(device => {
+          const id = device._id || device.id;
           const isOff = device.type === 'lock' ? device.state.isLocked : !device.state.isOn;
           const isOnline = device.status === 'online';
 
           return (
-            <div key={device.id} className="glass-panel p-6 rounded-2xl group hover:shadow-[0_8px_30px_rgba(102,252,241,0.15)] hover:border-[#66fcf1]/30 transition-all duration-300 flex flex-col min-h-[220px]">
+            <div key={id} className="glass-panel p-6 rounded-2xl group hover:shadow-[0_8px_30px_rgba(102,252,241,0.15)] hover:border-[#66fcf1]/30 transition-all duration-300 flex flex-col min-h-[220px]">
 
               {/* Header */}
               <div className="flex justify-between items-start mb-6">
@@ -461,7 +462,7 @@ export default function Dashboard() {
                  {device.type === 'light' && (
                   <div className="flex flex-col items-center gap-4 w-full">
                     <div 
-                      onClick={() => isOnline && toggleDevice(device.id)}
+                      onClick={() => isOnline && toggleDevice(id)}
                       className="w-16 h-16 rounded-full flex items-center justify-center transition-all duration-500 cursor-pointer"
                       style={{
                         background: !isOff ? `${device.state?.color || '#66fcf1'}22` : '#1f2937',
@@ -481,7 +482,7 @@ export default function Dashboard() {
                       <input 
                         type="range" min="0" max="100" 
                         value={device.state?.brightness || 0}
-                        onChange={(e) => updateDeviceState(device.id, { brightness: parseInt(e.target.value) })}
+                        onChange={(e) => updateDeviceState(id, { brightness: parseInt(e.target.value) })}
                         disabled={isOff || !isOnline}
                         className="w-full cursor-pointer disabled:opacity-50 mt-1"
                         style={{ accentColor: device.state?.color || '#66fcf1' }}
@@ -500,7 +501,7 @@ export default function Dashboard() {
                         <button
                           key={color.hex}
                           disabled={isOff || !isOnline}
-                          onClick={() => updateDeviceState(device.id, { color: color.hex })}
+                          onClick={() => updateDeviceState(id, { color: color.hex })}
                           className={`w-4 h-4 rounded-full border transition-all active:scale-90 ${device.state?.color === color.hex ? 'border-white scale-110 shadow-lg' : 'border-transparent hover:scale-105'}`}
                           style={{ 
                             backgroundColor: color.hex,
@@ -534,8 +535,8 @@ export default function Dashboard() {
                     >
                       {isOff || !isOnline ? (
                         <div className="text-center space-y-2">
-                          <Video size={36} className="text-gray-500 mx-auto" />
-                          <p className="text-xs font-mono tracking-wider text-gray-500 font-bold uppercase">FEED INACTIVE</p>
+                           <Video size={36} className="text-gray-500 mx-auto" />
+                           <p className="text-xs font-mono tracking-wider text-gray-500 font-bold uppercase">FEED INACTIVE</p>
                         </div>
                       ) : (
                         <>
@@ -582,12 +583,12 @@ export default function Dashboard() {
                   <div className={`relative w-8 h-4 rounded-full transition-colors ${device.geofenceEnabled ? 'bg-[#aa3bff]/50 border border-[#aa3bff]' : 'bg-gray-700'}`}>
                     <div className={`absolute top-0.5 left-0.5 w-3 h-3 rounded-full bg-white transition-transform ${device.geofenceEnabled ? 'translate-x-4' : 'translate-x-0'}`}></div>
                   </div>
-                  <input type="checkbox" className="hidden" checked={device.geofenceEnabled} onChange={() => toggleGeofence(device.id)} />
+                  <input type="checkbox" className="hidden" checked={device.geofenceEnabled} onChange={() => toggleGeofence(id)} />
                   <span className="text-xs font-medium text-[#8892b0] group-hover/geo:text-white transition-colors">Auto-Prox</span>
                 </label>
 
                 <button
-                  onClick={() => toggleDevice(device.id)}
+                  onClick={() => toggleDevice(id)}
                   disabled={!isOnline}
                   className={`px-4 py-2 rounded-lg font-bold text-sm transition-all ${!isOnline ? 'opacity-50 cursor-not-allowed bg-gray-800 text-gray-500' :
                       isOff ? 'bg-gray-800 text-gray-400 hover:bg-gray-700' : 'bg-[#66fcf1]/20 text-[#66fcf1] border border-[#66fcf1]/50'

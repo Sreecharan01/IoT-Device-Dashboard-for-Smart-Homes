@@ -153,6 +153,8 @@ const savedHome = (() => {
 
 const API_URL = import.meta.env.VITE_API_URL || '/api';
 
+const updateTimeouts = {};
+
 export const useDeviceStore = create((set, get) => ({
   devices: [],
   userLocation: null,           // { lat, lng } — live GPS
@@ -278,7 +280,14 @@ export const useDeviceStore = create((set, get) => ({
       const devices = state.devices.map(device => {
         if (device.id === id || device._id === id) {
           const updatedDevice = { ...device, state: { ...device.state, ...newStateUpdate } };
-          get().updateDeviceApi(device._id || device.id, updatedDevice);
+          
+          // Debounce the API call per device ID to prevent network spam and UI jitter
+          if (updateTimeouts[id]) clearTimeout(updateTimeouts[id]);
+          updateTimeouts[id] = setTimeout(() => {
+            get().updateDeviceApi(device._id || device.id, updatedDevice);
+            delete updateTimeouts[id];
+          }, 300);
+
           return updatedDevice;
         }
         return device;
