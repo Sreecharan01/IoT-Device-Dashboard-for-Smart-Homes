@@ -460,9 +460,30 @@ export default function Dashboard() {
               {/* Visual Body / Controls based on Type */}
               <div className="flex-1 flex flex-col justify-center items-center py-4">
                 {device.type === 'thermostat' && (
-                  <div className="relative w-24 h-24 rounded-full border-4 flex items-center justify-center transition-colors duration-500"
-                    style={{ borderColor: device.state.mode === 'cool' ? '#66fcf1' : '#f59e0b' }}>
-                    <div className="text-3xl font-mono text-white">{device.state.temp}°</div>
+                  <div className="flex flex-col items-center gap-3">
+                    <div className="relative w-24 h-24 rounded-full border-4 flex items-center justify-center transition-colors duration-500"
+                      style={{ borderColor: device.state.mode === 'cool' ? '#66fcf1' : '#f59e0b' }}>
+                      <div className="text-3xl font-mono text-white">{device.state.temp}°</div>
+                    </div>
+                    {/* Temperature adjusters */}
+                    <div className="flex gap-2 w-28">
+                      <button 
+                        onClick={() => {
+                          const currentTemp = device.state?.temp || 22;
+                          updateDeviceState(id, { temp: Math.max(16, currentTemp - 1) });
+                        }}
+                        disabled={isOff || !isOnline}
+                        className="flex-1 py-1 rounded-lg bg-white/5 border border-white/10 hover:border-[#66fcf1]/50 text-white text-xs font-bold transition-colors disabled:opacity-30 cursor-pointer"
+                      >-</button>
+                      <button 
+                        onClick={() => {
+                          const currentTemp = device.state?.temp || 22;
+                          updateDeviceState(id, { temp: Math.min(30, currentTemp + 1) });
+                        }}
+                        disabled={isOff || !isOnline}
+                        className="flex-1 py-1 rounded-lg bg-white/5 border border-white/10 hover:border-[#f59e0b]/50 text-white text-xs font-bold transition-colors disabled:opacity-30 cursor-pointer"
+                      >+</button>
+                    </div>
                   </div>
                 )}
 

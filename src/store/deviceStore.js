@@ -18,7 +18,7 @@ const defaultDevices = [
     type: 'thermostat',
     location: 'Hallway',
     status: 'online',
-    state: { temp: 22, mode: 'cool' },
+    state: { isOn: true, temp: 22, mode: 'cool' },
     connection: 'wifi',
     geofenceEnabled: true,
     satelliteSupport: false,
