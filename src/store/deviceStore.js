@@ -7,7 +7,7 @@ const defaultDevices = [
     type: 'light',
     location: 'Living Room',
     status: 'online',
-    state: { isOn: false, brightness: 80 },
+    state: { isOn: false, brightness: 80, color: '#66fcf1' },
     connection: 'wifi',
     geofenceEnabled: true,
     satelliteSupport: false,

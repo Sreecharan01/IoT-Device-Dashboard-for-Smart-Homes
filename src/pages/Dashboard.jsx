@@ -458,9 +458,58 @@ export default function Dashboard() {
                   </div>
                 )}
 
-                {device.type === 'light' && (
-                  <div className={`w-16 h-16 rounded-full flex items-center justify-center transition-all duration-500 ${!isOff ? 'bg-[#66fcf1]/20 shadow-[0_0_30px_#66fcf1]' : 'bg-gray-800'}`}>
-                    <Power size={32} className={!isOff ? 'text-[#66fcf1]' : 'text-gray-500'} />
+                 {device.type === 'light' && (
+                  <div className="flex flex-col items-center gap-4 w-full">
+                    <div 
+                      onClick={() => isOnline && toggleDevice(device.id)}
+                      className="w-16 h-16 rounded-full flex items-center justify-center transition-all duration-500 cursor-pointer"
+                      style={{
+                        background: !isOff ? `${device.state?.color || '#66fcf1'}22` : '#1f2937',
+                        boxShadow: !isOff ? `0 0 30px ${device.state?.color || '#66fcf1'}` : 'none',
+                        border: !isOff ? `1.5px solid ${device.state?.color || '#66fcf1'}` : '1.5px solid transparent'
+                      }}
+                    >
+                      <Power size={32} style={{ color: !isOff ? (device.state?.color || '#66fcf1') : '#6b7280' }} />
+                    </div>
+
+                    {/* Brightness slider */}
+                    <div className="space-y-1 w-full">
+                      <div className="flex justify-between text-[10px] font-mono text-[#8892b0]">
+                        <span>BRIGHTNESS</span>
+                        <span>{device.state?.brightness || 0}%</span>
+                      </div>
+                      <input 
+                        type="range" min="0" max="100" 
+                        value={device.state?.brightness || 0}
+                        onChange={(e) => updateDeviceState(device.id, { brightness: parseInt(e.target.value) })}
+                        disabled={isOff || !isOnline}
+                        className="w-full cursor-pointer disabled:opacity-50 h-1 rounded-lg bg-white/10 appearance-none"
+                        style={{ accentColor: device.state?.color || '#66fcf1' }}
+                      />
+                    </div>
+
+                    {/* Color presets */}
+                    <div className="flex justify-center gap-2.5">
+                      {[
+                        { hex: '#66fcf1', name: 'cyan' },
+                        { hex: '#aa3bff', name: 'purple' },
+                        { hex: '#f59e0b', name: 'amber' },
+                        { hex: '#ef4444', name: 'red' },
+                        { hex: '#ffffff', name: 'white' }
+                      ].map(color => (
+                        <button
+                          key={color.hex}
+                          disabled={isOff || !isOnline}
+                          onClick={() => updateDeviceState(device.id, { color: color.hex })}
+                          className={`w-4 h-4 rounded-full border transition-all active:scale-90 ${device.state?.color === color.hex ? 'border-white scale-110 shadow-lg' : 'border-transparent hover:scale-105'}`}
+                          style={{ 
+                            backgroundColor: color.hex,
+                            boxShadow: device.state?.color === color.hex ? `0 0 8px ${color.hex}` : 'none'
+                          }}
+                          title={color.name}
+                        />
+                      ))}
+                    </div>
                   </div>
                 )}
 

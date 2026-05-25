@@ -216,10 +216,54 @@ export default function Devices() {
 
               {/* Dynamic Controls based on Type */}
               <div className="mt-auto space-y-4 pt-4 border-t border-white/5">
-                {(device.type === 'light' || device.type === 'tv' || device.type === 'audio') && (
+                {device.type === 'light' && (
+                  <div className="space-y-4 w-full">
+                    {/* Brightness */}
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-xs text-[#8892b0]">
+                        <span>Brightness</span>
+                        <span>{device.state?.brightness || 0}%</span>
+                      </div>
+                      <input 
+                        type="range" min="0" max="100" 
+                        value={device.state?.brightness || 0}
+                        onChange={(e) => updateDeviceState(id, { brightness: parseInt(e.target.value) })}
+                        disabled={!device.state?.isOn || device.status === 'offline'}
+                        className="w-full cursor-pointer disabled:opacity-50"
+                        style={{ accentColor: device.state?.color || '#66fcf1' }}
+                      />
+                    </div>
+                    {/* Color */}
+                    <div className="space-y-2">
+                      <span className="text-xs text-[#8892b0] block">Color</span>
+                      <div className="flex gap-2">
+                        {[
+                          '#66fcf1',
+                          '#aa3bff',
+                          '#f59e0b',
+                          '#ef4444',
+                          '#ffffff'
+                        ].map(c => (
+                          <button
+                            key={c}
+                            disabled={!device.state?.isOn || device.status === 'offline'}
+                            onClick={() => updateDeviceState(id, { color: c })}
+                            className={`w-5 h-5 rounded-full border transition-all ${device.state?.color === c ? 'border-white scale-110 shadow-md' : 'border-transparent'}`}
+                            style={{ 
+                              backgroundColor: c,
+                              boxShadow: device.state?.color === c ? `0 0 6px ${c}` : 'none'
+                            }}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {(device.type === 'tv' || device.type === 'audio') && (
                   <div className="space-y-2">
                     <div className="flex justify-between text-xs text-[#8892b0]">
-                      <span>{device.type === 'light' ? 'Brightness' : 'Volume'}</span>
+                      <span>Volume</span>
                       <span>{device.state?.brightness || 0}%</span>
                     </div>
                     <input 
