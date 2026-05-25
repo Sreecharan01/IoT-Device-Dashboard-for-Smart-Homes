@@ -555,7 +555,12 @@ export default function Dashboard() {
                 )}
 
                 {device.type === 'camera' && (() => {
-                  const cameraFeedUrl = device.name.toLowerCase().includes('patio') ? '/patio_feed.png' : '/living_room_feed.png';
+                  const nameL = device.name.toLowerCase();
+                  const cameraFeedUrl = nameL.includes('doorbell') || nameL.includes('bell') || nameL.includes('door')
+                    ? '/doorbell_feed.png'
+                    : nameL.includes('patio')
+                    ? '/patio_feed.png'
+                    : '/living_room_feed.png';
                   return (
                     <div 
                       onClick={() => isOnline && !isOff && setSelectedCamera(device)}
@@ -685,7 +690,12 @@ export default function Dashboard() {
 
       {/* Selected Camera Modal */}
       {selectedCamera && (() => {
-        const cameraFeedUrl = selectedCamera.name.toLowerCase().includes('patio') ? '/patio_feed.png' : '/living_room_feed.png';
+        const nameL = selectedCamera.name.toLowerCase();
+        const cameraFeedUrl = nameL.includes('doorbell') || nameL.includes('bell') || nameL.includes('door')
+          ? '/doorbell_feed.png'
+          : nameL.includes('patio')
+          ? '/patio_feed.png'
+          : '/living_room_feed.png';
         return (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
             <div className="glass-panel p-6 rounded-2xl w-full max-w-4xl border border-[#66fcf1]/30 relative overflow-hidden flex flex-col md:flex-row gap-6">
