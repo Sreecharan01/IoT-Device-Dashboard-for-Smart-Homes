@@ -75,7 +75,7 @@ const defaultDevices = [
     type: 'tv',
     location: 'Living Room',
     status: 'online',
-    state: { isOn: false, brightness: 35 },
+    state: { isOn: false, brightness: 35, channel: 2 },
     connection: 'wifi',
     geofenceEnabled: false,
     satelliteSupport: false,

@@ -2,6 +2,7 @@ import { useState, useRef } from 'react';
 import { useDeviceStore } from '../store/deviceStore';
 import { Search, Plus, X, Lightbulb, Lock, Camera, Thermometer, Power, Volume2, Trash2, Tv, Speaker, Wind, Droplet, Plug, Eye, Refrigerator } from 'lucide-react';
 import FridgeInventoryModal from '../components/FridgeInventoryModal';
+import TvRemoteModal from '../components/TvRemoteModal';
 import gsap from 'gsap';
 import { Flip } from 'gsap/Flip';
 
@@ -13,8 +14,10 @@ export default function Devices() {
   const { devices, addDevice, removeDevice, toggleDevice, updateDeviceState } = useDeviceStore();
   const [filter, setFilter] = useState('all');
   const [selectedFridgeId, setSelectedFridgeId] = useState(null);
+  const [selectedTvId, setSelectedTvId] = useState(null);
 
   const selectedFridge = devices.find(d => (d._id || d.id) === selectedFridgeId);
+  const selectedTv = devices.find(d => (d._id || d.id) === selectedTvId);
   const [search, setSearch] = useState('');
   const [isAdding, setIsAdding] = useState(false);
   const [scanState, setScanState] = useState('idle');
@@ -277,6 +280,16 @@ export default function Devices() {
                       disabled={!device.state?.isOn || device.status === 'offline'}
                       className="w-full accent-[#66fcf1] cursor-pointer disabled:opacity-50"
                     />
+                    
+                    {device.type === 'tv' && (
+                      <button
+                        onClick={() => setSelectedTvId(id)}
+                        disabled={!device.state?.isOn || device.status === 'offline'}
+                        className="w-full py-2 bg-[#aa3bff]/10 hover:bg-[#aa3bff]/25 border border-[#aa3bff]/30 hover:border-[#aa3bff]/50 text-[#c084fc] rounded-lg text-xs font-bold transition-colors cursor-pointer mt-2 disabled:opacity-40"
+                      >
+                        Universal Remote
+                      </button>
+                    )}
                   </div>
                 )}
                 
@@ -489,6 +502,13 @@ export default function Devices() {
         <FridgeInventoryModal 
           device={selectedFridge} 
           onClose={() => setSelectedFridgeId(null)} 
+        />
+      )}
+
+      {selectedTv && (
+        <TvRemoteModal 
+          device={selectedTv} 
+          onClose={() => setSelectedTvId(null)} 
         />
       )}
     </div>

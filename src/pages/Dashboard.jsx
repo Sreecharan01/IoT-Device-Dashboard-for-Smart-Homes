@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import { useDeviceStore } from '../store/deviceStore';
 import { Power, MapPin, Wifi, Satellite, Lock, Unlock, Fan, Navigation, Radio, Tv, Speaker, Video, Wind, Droplet, Plug, Eye, Refrigerator, Lightbulb } from 'lucide-react';
 import FridgeInventoryModal from '../components/FridgeInventoryModal';
+import TvRemoteModal from '../components/TvRemoteModal';
 import gsap from 'gsap';
 
 const getDeviceIcon = (type) => {
@@ -35,8 +36,10 @@ export default function Dashboard() {
   const [gpsError, setGpsError] = useState(null);
   const [gpsAccuracy, setGpsAccuracy] = useState(null);
   const [selectedFridgeId, setSelectedFridgeId] = useState(null);
+  const [selectedTvId, setSelectedTvId] = useState(null);
 
   const selectedFridge = devices.find(d => (d._id || d.id) === selectedFridgeId);
+  const selectedTv = devices.find(d => (d._id || d.id) === selectedTvId);
   const [selectedCamera, setSelectedCamera] = useState(null);
   const [liveTime, setLiveTime] = useState('');
 
@@ -610,6 +613,16 @@ export default function Dashboard() {
                         style={{ accentColor: '#66fcf1' }}
                       />
                     </div>
+                    {/* TV Universal Remote trigger */}
+                    {device.type === 'tv' && (
+                      <button
+                        onClick={() => !isOff && isOnline && setSelectedTvId(id)}
+                        disabled={isOff || !isOnline}
+                        className="px-4 py-1.5 bg-[#aa3bff]/10 hover:bg-[#aa3bff]/25 border border-[#aa3bff]/30 disabled:opacity-50 text-[#c084fc] rounded-lg text-[10px] font-bold tracking-wide uppercase transition-colors cursor-pointer mt-1"
+                      >
+                        Universal Remote
+                      </button>
+                    )}
                   </div>
                 )}
 
@@ -768,6 +781,13 @@ export default function Dashboard() {
         <FridgeInventoryModal 
           device={selectedFridge} 
           onClose={() => setSelectedFridgeId(null)} 
+        />
+      )}
+
+      {selectedTv && (
+        <TvRemoteModal 
+          device={selectedTv} 
+          onClose={() => setSelectedTvId(null)} 
         />
       )}
     </div>
