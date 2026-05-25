@@ -483,7 +483,7 @@ export default function Dashboard() {
                         value={device.state?.brightness || 0}
                         onChange={(e) => updateDeviceState(device.id, { brightness: parseInt(e.target.value) })}
                         disabled={isOff || !isOnline}
-                        className="w-full cursor-pointer disabled:opacity-50 h-1 rounded-lg bg-white/10 appearance-none"
+                        className="w-full cursor-pointer disabled:opacity-50 mt-1"
                         style={{ accentColor: device.state?.color || '#66fcf1' }}
                       />
                     </div>
