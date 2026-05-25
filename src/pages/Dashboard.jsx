@@ -1,7 +1,25 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { useDeviceStore } from '../store/deviceStore';
-import { Power, MapPin, Wifi, Satellite, Lock, Unlock, Fan, Navigation, Radio } from 'lucide-react';
+import { Power, MapPin, Wifi, Satellite, Lock, Unlock, Fan, Navigation, Radio, Tv, Speaker, Video, Wind, Droplet, Plug, Eye, Refrigerator, Lightbulb } from 'lucide-react';
 import gsap from 'gsap';
+
+const getDeviceIcon = (type) => {
+  switch (type) {
+    case 'light': return Lightbulb;
+    case 'lock': return Lock;
+    case 'camera': return Video;
+    case 'thermostat':
+    case 'ac': return Fan;
+    case 'tv': return Tv;
+    case 'audio': return Speaker;
+    case 'vacuum': return Wind;
+    case 'sprinkler': return Droplet;
+    case 'plug': return Plug;
+    case 'sensor': return Eye;
+    case 'fridge': return Refrigerator;
+    default: return Lightbulb;
+  }
+};
 
 export default function Dashboard() {
   const {
@@ -442,6 +460,15 @@ export default function Dashboard() {
                     {!isOff ? <Unlock size={36} className="text-[#10b981]" /> : <Lock size={36} className="text-[#ef4444]" />}
                   </div>
                 )}
+
+                {!['thermostat', 'light', 'ac', 'lock'].includes(device.type) && (() => {
+                  const Icon = getDeviceIcon(device.type);
+                  return (
+                    <div className={`p-4 rounded-full transition-all duration-500 ${!isOff ? 'bg-[#66fcf1]/20 shadow-[0_0_30px_rgba(102,252,241,0.3)]' : 'bg-gray-800'}`}>
+                      <Icon size={36} className={!isOff ? 'text-[#66fcf1]' : 'text-gray-500'} />
+                    </div>
+                  );
+                })()}
               </div>
 
               {/* Footer Actions */}

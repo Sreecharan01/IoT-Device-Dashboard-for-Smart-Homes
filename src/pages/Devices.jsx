@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { useDeviceStore } from '../store/deviceStore';
-import { Search, Plus, X, Lightbulb, Lock, Camera, Thermometer, Power, Volume2, Trash2 } from 'lucide-react';
+import { Search, Plus, X, Lightbulb, Lock, Camera, Thermometer, Power, Volume2, Trash2, Tv, Speaker, Wind, Droplet, Plug, Eye, Refrigerator } from 'lucide-react';
 import gsap from 'gsap';
 import { Flip } from 'gsap/Flip';
 
@@ -99,7 +99,8 @@ export default function Devices() {
                          newDevice.type === 'tv' || newDevice.type === 'audio' ? { isOn: false, brightness: 50 } :
                          newDevice.type === 'lock' ? { isLocked: true } :
                          newDevice.type === 'thermostat' || newDevice.type === 'ac' ? { isOn: false, temp: 24, mode: 'cool' } :
-                         {};
+                         newDevice.type === 'fridge' ? { isOn: true, temp: 4 } :
+                         { isOn: false };
     
     await addDevice({ ...newDevice, id: `dev-${Date.now()}`, state: initialState }); 
     setIsAdding(false);
@@ -113,8 +114,13 @@ export default function Devices() {
       case 'camera': return Camera;
       case 'thermostat':
       case 'ac': return Thermometer;
-      case 'tv':
-      case 'audio': return Volume2;
+      case 'tv': return Tv;
+      case 'audio': return Speaker;
+      case 'vacuum': return Wind;
+      case 'sprinkler': return Droplet;
+      case 'plug': return Plug;
+      case 'sensor': return Eye;
+      case 'fridge': return Refrigerator;
       default: return Lightbulb;
     }
   };
@@ -136,7 +142,7 @@ export default function Devices() {
 
       <div className="flex flex-col md:flex-row gap-4 items-center justify-between bg-black/20 p-4 rounded-xl border border-white/5">
         <div className="flex gap-2 w-full md:w-auto overflow-x-auto pb-2 md:pb-0">
-          {['all', 'light', 'thermostat', 'lock', 'ac', 'online', 'offline'].map(f => (
+          {['all', 'light', 'thermostat', 'lock', 'ac', 'tv', 'audio', 'camera', 'fridge', 'vacuum', 'sprinkler', 'plug', 'sensor', 'online', 'offline'].map(f => (
             <button 
               key={f}
               onClick={() => handleFilter(f)}
@@ -373,11 +379,17 @@ export default function Devices() {
                     <label className="block text-sm text-[#8892b0] mb-1">Type</label>
                     <select value={newDevice.type} onChange={e => setNewDevice({...newDevice, type: e.target.value})} className="w-full bg-black/40 border border-white/10 rounded-lg p-3 text-white focus:border-[#66fcf1]/50 focus:outline-none appearance-none">
                       <option value="light">Smart Light</option>
-                      <option value="thermostat">Thermostat/AC</option>
+                      <option value="thermostat">Thermostat</option>
+                      <option value="ac">Air Conditioner</option>
                       <option value="lock">Smart Lock</option>
                       <option value="camera">Camera</option>
                       <option value="tv">Smart TV</option>
                       <option value="audio">Audio / Speaker</option>
+                      <option value="fridge">Smart Fridge</option>
+                      <option value="vacuum">Robotic Vacuum</option>
+                      <option value="sprinkler">Smart Sprinkler</option>
+                      <option value="plug">Smart Plug</option>
+                      <option value="sensor">Motion Sensor</option>
                     </select>
                   </div>
                   <div>
