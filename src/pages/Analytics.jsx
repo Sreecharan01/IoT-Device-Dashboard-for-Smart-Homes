@@ -8,7 +8,7 @@ export default function Analytics() {
   const { user } = useAuthStore();
   const devices = useDeviceStore(state => state.devices);
   
-  const currency = user?.currency || 'USD';
+  const currency = user?.currency || 'INR';
   
   let defaultPrice = 0.15;
   if (currency === 'INR') defaultPrice = 8.00;

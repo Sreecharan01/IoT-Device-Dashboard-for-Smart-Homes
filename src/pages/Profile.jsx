@@ -7,9 +7,9 @@ const API_URL = import.meta.env.VITE_API_URL || '/api';
 export default function Profile() {
   const { user, initAuth } = useAuthStore();
   const [formData, setFormData] = useState({
-    electricityPrice: 0.15,
+    electricityPrice: 8.00,
     homeSize: 1500,
-    currency: 'USD'
+    currency: 'INR'
   });
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState(null);
@@ -17,9 +17,9 @@ export default function Profile() {
   useEffect(() => {
     if (user) {
       setFormData({
-        electricityPrice: user.electricityPrice || 0.15,
+        electricityPrice: user.electricityPrice || 8.00,
         homeSize: user.homeSize || 1500,
-        currency: user.currency || 'USD'
+        currency: user.currency || 'INR'
       });
     }
   }, [user]);

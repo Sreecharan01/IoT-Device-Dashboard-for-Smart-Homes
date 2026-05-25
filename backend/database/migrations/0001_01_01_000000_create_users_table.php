@@ -19,9 +19,9 @@ return new class extends Migration
             $table->string('password');
             $table->string('role')->default('user'); // 'user' or 'admin'
             $table->string('subscription')->default('free'); // 'free', 'premium', 'pro'
-            $table->decimal('electricity_price', 8, 4)->default(0.15);
+            $table->decimal('electricity_price', 8, 4)->default(8.00);
             $table->integer('home_size')->default(1500);
-            $table->string('currency', 10)->default('USD');
+            $table->string('currency', 10)->default('INR');
             $table->rememberToken();
             $table->timestamps();
         });

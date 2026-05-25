@@ -6,9 +6,9 @@ const userSchema = new mongoose.Schema({
   password: { type: String, required: true },
   role: { type: String, enum: ['user', 'admin'], default: 'user' },
   subscription: { type: String, enum: ['free', 'premium', 'pro'], default: 'free' },
-  electricityPrice: { type: Number, default: 0.15 }, // price per kWh
+  electricityPrice: { type: Number, default: 8.00 }, // price per kWh
   homeSize: { type: Number, default: 1500 }, // sq ft
-  currency: { type: String, default: 'USD' }
+  currency: { type: String, default: 'INR' }
 }, { timestamps: true });
 
 userSchema.pre('save', async function () {
