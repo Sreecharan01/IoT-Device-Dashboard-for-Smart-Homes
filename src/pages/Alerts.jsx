@@ -2,20 +2,18 @@ import { useState, useEffect } from 'react';
 import { BellRing, AlertTriangle, Info, ShieldAlert, Send } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 
+const API_URL = import.meta.env.VITE_API_URL || '/api';
+
 export default function Alerts() {
   const { user } = useAuthStore();
   const [alerts, setAlerts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [newAlert, setNewAlert] = useState({ title: '', message: '', type: 'news' });
 
-  useEffect(() => {
-    fetchAlerts();
-  }, []);
-
   const fetchAlerts = async () => {
     try {
       const userInfo = JSON.parse(localStorage.getItem('userInfo'));
-      const res = await fetch('/api/alerts', {
+      const res = await fetch(`${API_URL}/alerts`, {
         headers: { Authorization: `Bearer ${userInfo?.token}` }
       });
       const data = await res.json();
@@ -26,11 +24,15 @@ export default function Alerts() {
     setLoading(false);
   };
 
+  useEffect(() => {
+    fetchAlerts();
+  }, []);
+
   const postAlert = async (e) => {
     e.preventDefault();
     try {
       const userInfo = JSON.parse(localStorage.getItem('userInfo'));
-      const res = await fetch('/api/alerts', {
+      const res = await fetch(`${API_URL}/alerts`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',

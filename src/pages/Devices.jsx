@@ -1,10 +1,12 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import { useDeviceStore } from '../store/deviceStore';
-import { Search, Plus, Filter, X, Lightbulb, Lock, Camera, Thermometer, Power, Volume2, Trash2 } from 'lucide-react';
+import { Search, Plus, X, Lightbulb, Lock, Camera, Thermometer, Power, Volume2, Trash2 } from 'lucide-react';
 import gsap from 'gsap';
 import { Flip } from 'gsap/Flip';
 
 gsap.registerPlugin(Flip);
+
+const API_URL = import.meta.env.VITE_API_URL || '/api';
 
 export default function Devices() {
   const { devices, addDevice, removeDevice, toggleDevice, updateDeviceState } = useDeviceStore();
@@ -28,7 +30,7 @@ export default function Devices() {
     const token = userInfo?.token;
 
     // 1) Real mDNS/WiFi scan via backend (runs in parallel with BT)
-    const networkScanPromise = fetch('/api/scan/devices', {
+    const networkScanPromise = fetch(`${API_URL}/scan/devices`, {
       headers: { Authorization: `Bearer ${token}` }
     })
     .then(r => r.json())
@@ -55,7 +57,7 @@ export default function Devices() {
         else if (/tv|display/i.test(n)) type = 'tv';
 
         found.push({ id: device.id, name: device.name || 'Unnamed BT Device', type, protocol: 'bluetooth' });
-      } catch (e) {
+      } catch {
         // User cancelled Bluetooth picker — that's fine
       }
     })();

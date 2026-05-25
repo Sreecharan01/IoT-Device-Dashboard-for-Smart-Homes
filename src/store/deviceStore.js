@@ -63,6 +63,8 @@ const savedHome = (() => {
   try { return JSON.parse(localStorage.getItem('syncra_home_location')); } catch { return null; }
 })();
 
+const API_URL = import.meta.env.VITE_API_URL || '/api';
+
 export const useDeviceStore = create((set, get) => ({
   devices: [],
   userLocation: null,           // { lat, lng } — live GPS
@@ -99,14 +101,14 @@ export const useDeviceStore = create((set, get) => ({
       const token = userInfo?.token;
       if (!token) return;
 
-      const res = await fetch('/api/devices', {
+      const res = await fetch(`${API_URL}/devices`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await res.json();
       if (data.length === 0) {
         // Seed db
         for (const dev of defaultDevices) {
-          await fetch('/api/devices', {
+          await fetch(`${API_URL}/devices`, {
             method: 'POST',
             headers: { 
               'Content-Type': 'application/json',
@@ -132,7 +134,7 @@ export const useDeviceStore = create((set, get) => ({
       const token = userInfo?.token;
       if (!token) return;
 
-      await fetch(`/api/devices/${id}`, {
+      await fetch(`${API_URL}/devices/${id}`, {
         method: 'PUT',
         headers: { 
           'Content-Type': 'application/json',
@@ -151,7 +153,7 @@ export const useDeviceStore = create((set, get) => ({
       const token = userInfo?.token;
       if (!token) return;
 
-      const res = await fetch('/api/devices', {
+      const res = await fetch(`${API_URL}/devices`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -173,7 +175,7 @@ export const useDeviceStore = create((set, get) => ({
       const token = userInfo?.token;
       if (!token) return;
 
-      await fetch(`/api/devices/${id}`, {
+      await fetch(`${API_URL}/devices/${id}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` }
       });

@@ -67,33 +67,6 @@ export default function Dashboard() {
           <h1 className="text-4xl font-heading font-bold text-white mb-2">Home Dashboard</h1>
           <p className="text-[#8892b0]">System active and monitoring.</p>
         </div>
-
-        {/* Phone tracker QR card */}
-        {(() => {
-          const trackerUrl = `${window.location.protocol}//${window.location.hostname}:${window.location.port}/tracker`;
-          const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(trackerUrl)}&bgcolor=0d0520&color=a78bfa&margin=4`;
-          return (
-            <div
-              className="flex items-center gap-4 px-5 py-4 rounded-2xl flex-shrink-0"
-              style={{ background: 'rgba(139,92,246,0.08)', border: '1px solid rgba(139,92,246,0.2)' }}
-            >
-              <img src={qrUrl} alt="QR code" width={80} height={80} style={{ borderRadius: '10px' }} />
-              <div>
-                <p className="text-xs font-mono uppercase tracking-widest text-[#a78bfa] mb-1">📱 Phone Tracker</p>
-                <p className="text-xs text-white font-semibold mb-1">Scan to open on your phone</p>
-                <a
-                  href={trackerUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-[10px] font-mono text-[#8892b0] hover:text-[#a78bfa] transition-colors break-all"
-                >
-                  {trackerUrl}
-                </a>
-                <p className="text-[10px] text-[#4a5568] mt-1">📶 Same WiFi network required</p>
-              </div>
-            </div>
-          );
-        })()}
       </div>
 
       {/* 4A: Hero Stats Bar */}

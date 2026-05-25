@@ -12,7 +12,6 @@ import AdminPanel from './pages/AdminPanel';
 import Analytics from './pages/Analytics';
 import Alerts from './pages/Alerts';
 import Profile from './pages/Profile';
-import MobileTracker from './pages/MobileTracker';
 import MainLayout from './layouts/MainLayout';
 import { useAuthStore } from './store/authStore';
 import { useDeviceStore } from './store/deviceStore';
@@ -56,7 +55,6 @@ function App() {
     <Router>
       <Routes>
         <Route path="/login" element={<Login />} />
-        <Route path="/tracker" element={<MobileTracker />} />
         
         <Route path="/" element={
           <ProtectedRoute>

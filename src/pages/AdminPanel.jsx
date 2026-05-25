@@ -1,15 +1,13 @@
 import { useState, useEffect } from 'react';
 import { ShieldAlert, User, Laptop, Key } from 'lucide-react';
 
+const API_URL = import.meta.env.VITE_API_URL || '/api';
+
 export default function AdminPanel() {
   const [users, setUsers] = useState([]);
   const [devices, setDevices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
-  useEffect(() => {
-    fetchAdminData();
-  }, []);
 
   const fetchAdminData = async () => {
     try {
@@ -17,11 +15,16 @@ export default function AdminPanel() {
       const token = userInfo?.token;
       
       const [usersRes, devicesRes] = await Promise.all([
-        fetch('/api/admin/users', { headers: { Authorization: `Bearer ${token}` } }),
-        fetch('/api/admin/devices', { headers: { Authorization: `Bearer ${token}` } })
+        fetch(`${API_URL}/admin/users`, { headers: { Authorization: `Bearer ${token}` } }),
+        fetch(`${API_URL}/admin/devices`, { headers: { Authorization: `Bearer ${token}` } })
       ]);
       
-      if (!usersRes.ok || !devicesRes.ok) throw new Error('Failed to fetch admin data');
+      if (!usersRes.ok || !devicesRes.ok) {
+        const usersErr = !usersRes.ok ? (await usersRes.json().catch(() => ({}))).message || `Users status ${usersRes.status}` : '';
+        const devicesErr = !devicesRes.ok ? (await devicesRes.json().catch(() => ({}))).message || `Devices status ${devicesRes.status}` : '';
+        const errMsg = [usersErr, devicesErr].filter(Boolean).join('; ');
+        throw new Error(errMsg || 'Failed to fetch admin data');
+      }
       
       const usersData = await usersRes.json();
       const devicesData = await devicesRes.json();
@@ -35,12 +38,16 @@ export default function AdminPanel() {
     }
   };
 
+  useEffect(() => {
+    fetchAdminData();
+  }, []);
+
   const updateSubscription = async (userId, subscription) => {
     try {
       const userInfo = JSON.parse(localStorage.getItem('userInfo'));
       const token = userInfo?.token;
       
-      const res = await fetch(`/api/admin/users/${userId}/subscription`, {
+      const res = await fetch(`${API_URL}/admin/users/${userId}/subscription`, {
         method: 'PUT',
         headers: { 
           'Content-Type': 'application/json',

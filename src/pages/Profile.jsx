@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { User, Zap, Home, DollarSign, Save } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 
+const API_URL = import.meta.env.VITE_API_URL || '/api';
+
 export default function Profile() {
   const { user, initAuth } = useAuthStore();
   const [formData, setFormData] = useState({
@@ -44,7 +46,7 @@ export default function Profile() {
     setMessage(null);
     try {
       const userInfo = JSON.parse(localStorage.getItem('userInfo'));
-      const res = await fetch('/api/auth/profile', {
+      const res = await fetch(`${API_URL}/auth/profile`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
