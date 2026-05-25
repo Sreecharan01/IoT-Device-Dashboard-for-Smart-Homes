@@ -267,7 +267,7 @@ export const useDeviceStore = create((set, get) => ({
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` }
       });
-      set((state) => ({ devices: state.devices.filter(d => (d._id || d.id) !== id) }));
+      set((state) => ({ devices: state.devices.filter(d => d.id !== id && d._id !== id) }));
     } catch (error) {
       console.error('Error removing device', error);
     }
@@ -276,9 +276,9 @@ export const useDeviceStore = create((set, get) => ({
   updateDeviceState: (id, newStateUpdate) => {
     set((state) => {
       const devices = state.devices.map(device => {
-        if ((device._id || device.id) === id) {
+        if (device.id === id || device._id === id) {
           const updatedDevice = { ...device, state: { ...device.state, ...newStateUpdate } };
-          get().updateDeviceApi(device.id, updatedDevice);
+          get().updateDeviceApi(device._id || device.id, updatedDevice);
           return updatedDevice;
         }
         return device;
