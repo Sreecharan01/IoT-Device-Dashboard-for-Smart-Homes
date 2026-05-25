@@ -586,7 +586,34 @@ export default function Dashboard() {
                   </div>
                 )}
 
-                {!['thermostat', 'light', 'ac', 'lock', 'camera', 'fridge'].includes(device.type) && (() => {
+                {(device.type === 'tv' || device.type === 'audio') && (
+                  <div className="flex flex-col items-center gap-4 w-full">
+                    <div className={`p-4 rounded-full transition-all duration-500 ${!isOff ? 'bg-[#66fcf1]/20 shadow-[0_0_30px_rgba(102,252,241,0.3)]' : 'bg-gray-800'}`}>
+                      {device.type === 'tv' ? (
+                        <Tv size={36} className={!isOff ? 'text-[#66fcf1]' : 'text-gray-500'} />
+                      ) : (
+                        <Speaker size={36} className={!isOff ? 'text-[#66fcf1]' : 'text-gray-500'} />
+                      )}
+                    </div>
+                    {/* Volume Slider */}
+                    <div className="space-y-1 w-full">
+                      <div className="flex justify-between text-[10px] font-mono text-[#8892b0]">
+                        <span>VOLUME</span>
+                        <span>{device.state?.brightness || 0}%</span>
+                      </div>
+                      <input 
+                        type="range" min="0" max="100" 
+                        value={device.state?.brightness || 0}
+                        onChange={(e) => updateDeviceState(id, { brightness: parseInt(e.target.value) })}
+                        disabled={isOff || !isOnline}
+                        className="w-full cursor-pointer disabled:opacity-50 mt-1"
+                        style={{ accentColor: '#66fcf1' }}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {!['thermostat', 'light', 'ac', 'lock', 'camera', 'fridge', 'tv', 'audio'].includes(device.type) && (() => {
                   const Icon = getDeviceIcon(device.type);
                   return (
                     <div className={`p-4 rounded-full transition-all duration-500 ${!isOff ? 'bg-[#66fcf1]/20 shadow-[0_0_30px_rgba(102,252,241,0.3)]' : 'bg-gray-800'}`}>
